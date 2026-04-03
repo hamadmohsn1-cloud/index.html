@@ -150,11 +150,31 @@
             100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
         }
 
+        /* زر الطوارئ لتشغيل الصوت */
+        #audio-fallback {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255, 65, 108, 0.9);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 30px;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 1.2em;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            z-index: 1000;
+            display: none;
+            animation: pulse 2s infinite;
+        }
+
         /* استجابة للشاشات الصغيرة */
         @media (max-width: 600px) {
             h1 { font-size: 4em; }
             .en-name { font-size: 2.5em; }
             .phrase { font-size: 1.4em; }
+            #audio-fallback { bottom: 15px; right: 15px; font-size: 1em; padding: 10px 20px; }
         }
     </style>
 </head>
@@ -177,63 +197,72 @@
         <div class="designer-signature">تصميم: حمزة</div>
     </div>
 
-    <audio id="bg-music" loop>
+    <button id="audio-fallback">🔊 اضغطي هنا لتشغيل الموسيقى</button>
+
+    <audio id="bg-music" loop preload="auto">
         <source src="music.mp3" type="audio/mpeg">
     </audio>
 
     <script>
-        // تحديد العناصر من الصفحة
         const startBtn = document.getElementById('start-btn');
         const content = document.getElementById('content');
         const bgMusic = document.getElementById('bg-music');
+        const audioFallbackBtn = document.getElementById('audio-fallback');
 
-        // إضافة حدث عند النقر على الزر
         startBtn.addEventListener('click', function() {
-            // 1. إخفاء الزر
+            // 1. إخفاء الزر الرئيسي
             startBtn.style.display = 'none';
             
             // 2. إظهار المحتوى
             content.style.display = 'block';
-            
-            // إضافة كلاس active لبدء الحركات (Animations)
             setTimeout(() => {
                 content.classList.add('active');
             }, 100);
 
-            // 3. تشغيل الموسيقى
-            bgMusic.play().catch(function(error) {
-                console.log("حدث خطأ في تشغيل الصوت:", error);
-            });
-
-            // 4. تشغيل تساقط القلوب والورود
+            // 3. بدء تساقط العناصر
             createFallingItems();
+
+            // 4. المحاولة الذكية لتشغيل الصوت
+            // استخدام Promise للتحقق مما إذا كان المتصفح سيسمح بالتشغيل أو سيرفض
+            const playPromise = bgMusic.play();
+
+            if (playPromise !== undefined) {
+                playPromise.then(_ => {
+                    // التشغيل نجح، لا حاجة لعمل شيء إضافي
+                    console.log("تم تشغيل الصوت بنجاح");
+                }).catch(error => {
+                    // التشغيل فشل بسبب سياسة المتصفح!
+                    console.log("المتصفح منع التشغيل التلقائي، سيتم إظهار زر طلب التشغيل", error);
+                    
+                    // إظهار زر الطوارئ لتطلب من المستخدم تشغيل الصوت بنفسه
+                    audioFallbackBtn.style.display = 'block';
+                });
+            }
         });
 
-        // دالة لإنشاء العناصر المتساقطة (بما أنك أضفت لها كود CSS)
+        // حدث عند الضغط على زر الطوارئ
+        audioFallbackBtn.addEventListener('click', function() {
+            bgMusic.play();
+            // إخفاء الزر بعد نجاح التشغيل
+            audioFallbackBtn.style.display = 'none';
+        });
+
         function createFallingItems() {
             const items = ['❤️', '💖', '✨', '🌹', '💕'];
             
             setInterval(() => {
                 const item = document.createElement('div');
                 item.classList.add('falling-item');
-                
-                // اختيار شكل عشوائي
                 item.innerText = items[Math.floor(Math.random() * items.length)];
-                
-                // تحديد مكان سقوط عشوائي بالعرض
                 item.style.left = Math.random() * 100 + 'vw';
-                
-                // سرعة وحجم عشوائيين
-                item.style.animationDuration = Math.random() * 3 + 4 + 's'; // بين 4 و 7 ثواني
-                item.style.fontSize = Math.random() * 1.5 + 1 + 'em'; // حجم مختلف
-                
+                item.style.animationDuration = Math.random() * 3 + 4 + 's';
+                item.style.fontSize = Math.random() * 1.5 + 1 + 'em';
                 document.body.appendChild(item);
 
-                // إزالة العنصر بعد انتهاء سقوطه حتى لا يثقل الصفحة
                 setTimeout(() => {
                     item.remove();
                 }, 7000);
-            }, 500); // إنشاء عنصر جديد كل نصف ثانية
+            }, 500);
         }
     </script>
 
