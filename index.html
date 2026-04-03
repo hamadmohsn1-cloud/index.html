@@ -72,7 +72,6 @@
             text-shadow: 0 0 15px rgba(255, 184, 210, 0.6);
         }
 
-        /* تنسيق العبارات المتتالية */
         .phrases-container {
             display: flex;
             flex-direction: column;
@@ -90,7 +89,6 @@
             text-shadow: 0 2px 5px rgba(0,0,0,0.5);
         }
 
-        /* تفعيل الأنيميشن للعبارات عند إعطاء الكلاس active للمحتوى */
         #content.active .phrase:nth-child(1) { animation: fadeInUp 1.5s forwards 1s; }
         #content.active .phrase:nth-child(2) { animation: fadeInUp 1.5s forwards 3s; }
         #content.active .phrase:nth-child(3) { animation: fadeInUp 1.5s forwards 5s; }
@@ -112,7 +110,6 @@
             animation: fadeIn 2s forwards 11s;
         }
 
-        /* تنسيق العناصر المتساقطة */
         .falling-item {
             position: absolute;
             top: -10%;
@@ -124,7 +121,6 @@
             z-index: 1;
         }
 
-        /* الحركات (Animations) */
         @keyframes pulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.03); text-shadow: 0 0 30px rgba(255, 65, 108, 1); }
@@ -150,7 +146,6 @@
             100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
         }
 
-        /* زر الطوارئ لتشغيل الصوت */
         #audio-fallback {
             position: fixed;
             bottom: 20px;
@@ -158,29 +153,24 @@
             background: rgba(255, 65, 108, 0.9);
             color: white;
             border: none;
-            padding: 15px 25px;
+            padding: 12px 20px;
             border-radius: 30px;
             font-family: 'Tajawal', sans-serif;
-            font-size: 1.2em;
             cursor: pointer;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
             z-index: 1000;
             display: none;
-            animation: pulse 2s infinite;
         }
 
-        /* استجابة للشاشات الصغيرة */
         @media (max-width: 600px) {
             h1 { font-size: 4em; }
             .en-name { font-size: 2.5em; }
             .phrase { font-size: 1.4em; }
-            #audio-fallback { bottom: 15px; right: 15px; font-size: 1em; padding: 10px 20px; }
         }
     </style>
 </head>
 <body>
 
-    <button id="start-btn">اضغطي هنا للدخول ❤️</button>
+    <button id="start-btn">اضغطي هنا للدخول يا جود ❤️</button>
 
     <div id="content">
         <h1>جود</h1>
@@ -197,59 +187,49 @@
         <div class="designer-signature">تصميم: حمزة</div>
     </div>
 
-    <button id="audio-fallback">🔊 اضغطي هنا لتشغيل الموسيقى</button>
-
-    <audio id="bg-music" loop preload="auto">
-        <source src="music.mp3" type="audio/mpeg">
-    </audio>
+    <button id="audio-fallback" onclick="forcePlay()">🔊 تشغيل الصوت</button>
 
     <script>
+        // الحل البرمجي الذكي: إنشاء كائن صوتي مستقل
+        const music = new Audio('music.mp3');
+        music.loop = true;
+        music.preload = 'auto';
+
         const startBtn = document.getElementById('start-btn');
         const content = document.getElementById('content');
-        const bgMusic = document.getElementById('bg-music');
-        const audioFallbackBtn = document.getElementById('audio-fallback');
+        const fallback = document.getElementById('audio-fallback');
+
+        // دالة التشغيل القسري
+        function forcePlay() {
+            music.play().then(() => {
+                fallback.style.display = 'none';
+            }).catch(err => console.log("خطأ في التشغيل:", err));
+        }
 
         startBtn.addEventListener('click', function() {
-            // 1. إخفاء الزر الرئيسي
+            // إخفاء الزر وإظهار المحتوى
             startBtn.style.display = 'none';
-            
-            // 2. إظهار المحتوى
             content.style.display = 'block';
-            setTimeout(() => {
-                content.classList.add('active');
-            }, 100);
+            setTimeout(() => content.classList.add('active'), 100);
 
-            // 3. بدء تساقط العناصر
+            // محاولة تشغيل الموسيقى
+            music.play().then(() => {
+                console.log("تم التشغيل بنجاح");
+            }).catch(error => {
+                console.log("المتصفح يطلب تفاعل إضافي");
+                fallback.style.display = 'block';
+            });
+
             createFallingItems();
-
-            // 4. المحاولة الذكية لتشغيل الصوت
-            // استخدام Promise للتحقق مما إذا كان المتصفح سيسمح بالتشغيل أو سيرفض
-            const playPromise = bgMusic.play();
-
-            if (playPromise !== undefined) {
-                playPromise.then(_ => {
-                    // التشغيل نجح، لا حاجة لعمل شيء إضافي
-                    console.log("تم تشغيل الصوت بنجاح");
-                }).catch(error => {
-                    // التشغيل فشل بسبب سياسة المتصفح!
-                    console.log("المتصفح منع التشغيل التلقائي، سيتم إظهار زر طلب التشغيل", error);
-                    
-                    // إظهار زر الطوارئ لتطلب من المستخدم تشغيل الصوت بنفسه
-                    audioFallbackBtn.style.display = 'block';
-                });
-            }
         });
 
-        // حدث عند الضغط على زر الطوارئ
-        audioFallbackBtn.addEventListener('click', function() {
-            bgMusic.play();
-            // إخفاء الزر بعد نجاح التشغيل
-            audioFallbackBtn.style.display = 'none';
-        });
+        // التأكد من أن الملف موجود (سيظهر تنبيه لك فقط إذا كان الاسم خطأ)
+        music.onerror = function() {
+            alert("خطأ: لم يتم العثور على ملف 'music.mp3'. تأكد من رفع الملف بنفس الاسم تماماً.");
+        };
 
         function createFallingItems() {
             const items = ['❤️', '💖', '✨', '🌹', '💕'];
-            
             setInterval(() => {
                 const item = document.createElement('div');
                 item.classList.add('falling-item');
@@ -258,13 +238,9 @@
                 item.style.animationDuration = Math.random() * 3 + 4 + 's';
                 item.style.fontSize = Math.random() * 1.5 + 1 + 'em';
                 document.body.appendChild(item);
-
-                setTimeout(() => {
-                    item.remove();
-                }, 7000);
+                setTimeout(() => item.remove(), 7000);
             }, 500);
         }
     </script>
-
 </body>
 </html>
